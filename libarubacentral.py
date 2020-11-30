@@ -304,3 +304,13 @@ class ArubaCentralAuth:
             return self._get_api(url, access_token=access_token)['count']
         else:
             return self._get_api(url, access_token=access_token)['clients']
+
+    def get_networks(self, access_token: dict=None):
+        url = '/monitoring/v1/networks'
+        return self._get_api(url, access_token=access_token)['networks']
+
+    def get_vcs(self, access_token: dict=None, group=None):
+        url = '/monitoring/v1/swarms'
+        if group:
+            url = self._add_arg(url, f"group={group}")
+        return self._get_api(url, access_token=access_token)['swarms']
