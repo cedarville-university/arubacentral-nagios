@@ -1,6 +1,6 @@
 venv/
 *.yml
-config/tokens/
+config/tokens/*.json
 pycache*
 venv/
 .idea/
