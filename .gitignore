@@ -1,0 +1,9 @@
+venv/
+*.yml
+config/tokens/
+pycache*
+venv/
+.idea/
+__pycache__/
+app/__pycache__/
+*.pyc
