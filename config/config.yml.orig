@@ -11,7 +11,7 @@
 #
 #
 
-ACME: 
+Default:
   # region is referenced from the ~/.arubacentral/regions.yml file
   region: US-2
   # client_id, client_secret, customer_id are stored in the API Gateway 
@@ -22,19 +22,4 @@ ACME:
   # reference from ~/.arubacentral/accounts.yml file
   user_account: profileOne
 
-CoffeeShop: 
-  # region is referenced from the ~/.arubacentral/regions.yml file
-  region: US-2
-  customer_id: ******
-  client_id: ************
-  client_secret: ************
-  # reference from ~/.arubacentral/accounts.yml file
-  user_account: profileTwo
-
-TicTacStuff:
-  region: US-2
-  customer_id: ***********
-  client_id: ************
-  client_secret: ************
-  user_account: profileTwo
 
