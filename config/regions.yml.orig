@@ -1,2 +1,8 @@
 US-2:
   url: https://apigw-prod2.central.arubanetworks.com
+
+US-1:
+  url: https://app1-apigw.central.arubanetworks.com
+
+CAN-1:
+  url: https://apigw-ca.central.arubanetworks.com
