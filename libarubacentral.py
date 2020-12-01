@@ -256,7 +256,7 @@ class ArubaCentralAuth:
         if r.status_code == 200:
             api_data = json.loads(r.text)
         else:
-            print("STATUS CODE: {} \nDetail: {}".format(str(r.status_code), str(r.text)))
+            raise RuntimeError("STATUS CODE: {} -- Detail: {}".format(str(r.status_code), str(r.text)))
         return api_data
 
     @staticmethod

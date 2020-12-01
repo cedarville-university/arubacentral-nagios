@@ -4,6 +4,7 @@ from libarubacentral import ArubaCentralConfig, ArubaCentralAuth
 import os
 import time
 import argparse
+import threading
 
 tool_description = "This tool is used by collectd to get client count statistics per network from Aruba Central"
 parser = argparse.ArgumentParser(description=tool_description, add_help=True)
@@ -52,9 +53,12 @@ if not INTERVAL:
 if DEBUG:
     INTERVAL = 5
 
-while True:
+def print_interval():
+    threading.Timer(INTERVAL, print_interval).start()
     for ssid in networks:
         name = ssid['essid']
         count = session.get_wifi_clients(network=name, count_only=True)
         print(f'PUTVAL "{HOSTNAME}/exec-ssid_aruba_{name}_clients/gauge-arubassid" interval={INTERVAL} N:{count}')
     time.sleep(int(float(INTERVAL)))
+
+print_interval()
