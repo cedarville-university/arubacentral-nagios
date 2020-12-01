@@ -287,7 +287,7 @@ class ArubaCentralAuth:
         return self._get_api(url, access_token=access_token)['count']
 
     def get_wifi_clients(self, vc = None, group=None, network=None, label=None, access_token=None, count_only=False,
-                         limit=1000):
+                         limit=1000, band=None):
         url = '/monitoring/v1/clients/wireless'
         if limit:
             url = self._add_arg(url, f"limit={str(limit)}")
@@ -299,6 +299,8 @@ class ArubaCentralAuth:
             url = self._add_arg(url, f"label={label}")
         if network:
             url = self._add_arg(url, f"network={network}")
+        if band:
+            url = self._add_arg(url, f"band={band}")
         url = self._add_arg(url, 'calculate_total=true')
         if count_only:
             return self._get_api(url, access_token=access_token)['count']
