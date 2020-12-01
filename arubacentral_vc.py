@@ -19,7 +19,6 @@ if not INTERVAL:
     INTERVAL = 60
 
 if DEBUG:
-    HOSTNAME = "netgraphs.cedarville.edu"
     INTERVAL = 5
 
 while True:
