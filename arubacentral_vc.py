@@ -49,4 +49,4 @@ while True:
         name = vc['name']
         count = session.get_wifi_clients(vc=name, count_only=True)
         print(f'PUTVAL "{HOSTNAME}/exec-vc_aruba_{name}_clients/gauge-arubavc" interval={INTERVAL} N:{count}')
-    time.sleep(INTERVAL)
+    time.sleep(int(INTERVAL))

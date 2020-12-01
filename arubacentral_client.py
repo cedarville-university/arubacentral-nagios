@@ -74,4 +74,4 @@ while True:
     for key,value in count_conn.items():
         print(f'PUTVAL "{HOSTNAME}/exec-connection_aruba_{key}_clients/gauge-arubatotal" interval={INTERVAL} N:{value}')
 
-    time.sleep(INTERVAL)
+    time.sleep(int(INTERVAL))
