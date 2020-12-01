@@ -9,8 +9,19 @@ tool_description = "This tool is used by collectd to get client count statistics
 parser = argparse.ArgumentParser(description=tool_description, add_help=True)
 parser.add_argument("-g", "--group", help ="get networks from this group")
 parser.add_argument("-n", "--network", help ="get client count for a single network")
+parser.add_argument("-c", "--configpath", help = "The path to the configuration folder (default: ./config)")
 parser.add_argument("-D", "--DEBUG", help ="turn on debug mode", action="store_true")
+parser.add_argument("-P", "--profile", help="The name of the profile in the config path to use.")
 args = parser.parse_args()
+
+if args.configpath:
+    config_path = args.configpath
+else:
+    config_path = './config'
+if args.profile:
+    profile = args.profile
+else:
+    profile = 'Default'
 
 group = None
 network = None
@@ -23,7 +34,7 @@ if args.network:
 if args.DEBUG:
     DEBUG = True
 
-session = ArubaCentralAuth(ArubaCentralConfig('Default', './config').read_config())
+session = ArubaCentralAuth(ArubaCentralConfig(profile, config_path).read_config())
 
 if network:
     networks = {'essid': network}
