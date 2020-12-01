@@ -65,13 +65,13 @@ while True:
                 count_conn[c] +=1
         if 'health' in i and i['health'] < 75:
             count_sick +=1
-    print(f'PUTVAL "{HOSTNAME}/exec-client_aruba_all/gauge-arubatotal" interval={INTERVAL} N:{len(clients)}')
-    print(f'PUTVAL "{HOSTNAME}/exec-client_aruba_sick/gauge-arubatotal" interval={INTERVAL} N:{count_sick}')
+    print(f'PUTVAL "{HOSTNAME}/exec-aruba_all_clients/gauge-arubatotal" interval={INTERVAL} N:{len(clients)}')
+    print(f'PUTVAL "{HOSTNAME}/exec-aruba_sick_clients/gauge-arubatotal" interval={INTERVAL} N:{count_sick}')
     for key,value in count_os.items():
         if key == '--':
             continue
-        print(f'PUTVAL "{HOSTNAME}/exec-client_os_aruba_{key.replace("/","").replace(" ", "")}/gauge-arubatotal" interval={INTERVAL} N:{value}')
+        print(f'PUTVAL "{HOSTNAME}/exec-os_aruba_{key.replace("/","").replace(" ", "")}_clients/gauge-arubatotal" interval={INTERVAL} N:{value}')
     for key,value in count_conn.items():
-        print(f'PUTVAL "{HOSTNAME}/exec-client_connection_aruba_{key}/gauge-arubatotal" interval={INTERVAL} N:{value}')
+        print(f'PUTVAL "{HOSTNAME}/exec-connection_aruba_{key}_clients/gauge-arubatotal" interval={INTERVAL} N:{value}')
 
     time.sleep(INTERVAL)
