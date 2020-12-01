@@ -57,4 +57,4 @@ while True:
         name = ssid['essid']
         count = session.get_wifi_clients(network=name, count_only=True)
         print(f'PUTVAL "{HOSTNAME}/exec-ssid_aruba_{name}_clients/gauge-arubassid" interval={INTERVAL} N:{count}')
-    time.sleep(INTERVAL)
+    time.sleep(int(INTERVAL))
