@@ -234,6 +234,12 @@ class ArubaCentralAuth:
                 return swarm['swarm_id']
         raise RuntimeError(f"No swarm found with name {name}")
 
+    def get_swarms(self, access_token:dict=None, group=None) -> list:
+        url = '/monitoring/v1/swarms'
+        if group:
+            url = self._add_arg(url, f"group={group}")
+        return self._get_api(url, access_token)['swarms']
+
     def get_ap(self, serial, access_token: dict = None):
         data = self._get_api(f'/monitoring/v1/aps/{serial}', access_token)
         return data

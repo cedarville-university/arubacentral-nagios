@@ -11,6 +11,7 @@ parser.add_argument("-g", "--group", help ="get clients from this group")
 parser.add_argument("-c", "--configpath", help = "The path to the configuration folder (default: ./config)")
 parser.add_argument("-D", "--DEBUG", help ="turn on debug mode", action="store_true")
 parser.add_argument("-P", "--profile", help="The name of the profile in the config path to use.")
+parser.add_argument("-i", "--interval", type=float, help="The interval at which to repeat the statistic (in seconds)")
 args = parser.parse_args()
 
 if args.configpath:
@@ -25,6 +26,7 @@ else:
 group = None
 DEBUG = None
 networks = list()
+swarms = list()
 
 if args.group:
     group = args.group
@@ -34,14 +36,18 @@ if args.DEBUG:
 session = ArubaCentralAuth(ArubaCentralConfig(profile, config_path).read_config())
 try:
     networks = session.get_networks(group=group)
+    swarms = session.get_swarms(group=group)
 except RuntimeError as e:
     print("Request failed: " + str(e))
     exit(1)
 swarm_id_lookup = {}
-for n in networks:
+for n in swarms:
     swarm_id_lookup[n['swarm_id']] = n['name']
 HOSTNAME = os.environ.get("COLLECTD_HOSTNAME")
 INTERVAL = os.environ.get("COLLECTD_INTERVAL")
+
+if args.interval:
+    INTERVAL = args.interval
 
 if not HOSTNAME:
     HOSTNAME = "localhost"
@@ -56,11 +62,11 @@ while True:
         clients = session.get_wifi_clients(group=group)
         count24 = 0
         count5 = 0
-        count_os = {}
-        count_conn = {}
+        count_os = dict()
+        count_conn = dict()
         count_sick = 0
-        count_ssid = {}
-        count_vc = {}
+        count_ssid = dict()
+        count_vc = dict()
         for i in clients:
             if 'band' in i and i['band'] == 5:
                 count5 += 1
@@ -103,4 +109,4 @@ while True:
     except RuntimeError as e:
         print("Request failed: " + str(e))
 
-    time.sleep(int(float(INTERVAL)))
+    time.sleep(float(INTERVAL))
