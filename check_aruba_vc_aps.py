@@ -71,7 +71,7 @@ elif down_count >= args.warn:
     retmsg = f"{down_count} APs are down in {name} | 'down_aps'={down_count}"
 else:
     if args.total:
-        total_aps = session.get_aps(swarm_id=sid, group=group)
+        total_aps = session.get_aps(swarm_id=sid, group=group, limit=args.total)
         total_count = len(total_aps)
         if total_count < args.total:
             retcode = 3
