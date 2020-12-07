@@ -77,7 +77,7 @@ else:
             retcode = 3
             retmsg = f"Not enough APs in {name}. Expected {args.total}, got {total_count} | 'aps'={total_count}"
         else:
-            retcode = 3
+            retcode = 0
             retmsg = f"OK - {total_count} APs are up in {name} | 'aps'={total_count}"
     else:
         retcode = 0
