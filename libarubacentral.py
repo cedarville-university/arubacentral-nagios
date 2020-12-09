@@ -140,7 +140,7 @@ class ArubaCentralAuth:
             with open(self.cfgdata['configpath'] + "/tokens/" + self.profile + ".token.json", 'w') as newtokenfile:
                 newtokenfile.write(json.dumps(tokens))
         else:
-            print("STATUS CODE: {} \nDetail: {}".format(str(r.status_code), str(r.text)))
+            raise RuntimeError(f"STATUS CODE: {str(r.status_code)} \nDetail: {str(r.text)}")
         return tokens
 
     def retrieve_stored_token(self):
@@ -175,7 +175,7 @@ class ArubaCentralAuth:
             with open(self.cfgdata['configpath'] + "/tokens/" + self.profile + ".token.json", 'w') as newtokenfile:
                 newtokenfile.write(json.dumps(new_token))
         else:
-            print("STATUS CODE: {} \nDetail: {}".format(str(r.status_code), str(r.text)))
+            raise RuntimeError(f"STATUS CODE: {str(r.status_code)} \nDetail: {str(r.text)}")
 
         return new_token
 
@@ -190,10 +190,18 @@ class ArubaCentralAuth:
             logging.debug("Access token valid. Expires at: %s ", expires_at)
             return False
 
+    def get_new_token(self):
+        cookies = self.get_login()
+        code = self.get_authcode(cookies)
+        self.get_access_token(code)
+
     def authenticate(self):
         if not self.access_token:
-            logging.debug(f"Access token not cached. retrieving from {self.cfgdata['configpath']+'/tokens/' + self.profile + '.token.json'}")
+            logging.debug(f"Access token not cached. retrieving from {self.cfgdata['configpath']+'tokens/' + self.profile + '.token.json'}")
             self.access_token = self.retrieve_stored_token()
+        if self.token_expired():
+            new_tokens = self.refresh_access_token()
+            self.get_new_token()
         if not self.access_token:
             logging.debug(f"Access token not stored. Generating a new token.")
             cookies = self.get_login()
@@ -262,7 +270,7 @@ class ArubaCentralAuth:
         if r.status_code == 200:
             api_data = json.loads(r.text)
         else:
-            raise RuntimeError("STATUS CODE: {} -- Detail: {}".format(str(r.status_code), str(r.text)))
+            raise RuntimeError(f"STATUS CODE: {str(r.status_code)} \nDetail: {str(r.text)}")
         return api_data
 
     @staticmethod
