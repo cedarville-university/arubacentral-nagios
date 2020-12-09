@@ -65,17 +65,17 @@ down_count = len(down_aps)
 
 if down_count >= args.crit:
     retcode = 2
-    retmsg = f"{down_count} APs are down in {name} | 'down_aps'={down_count}"
+    retmsg = f"CRITICAL - {down_count} APs are down in {name} | 'down_aps'={down_count}"
 elif down_count >= args.warn:
     retcode = 1
-    retmsg = f"{down_count} APs are down in {name} | 'down_aps'={down_count}"
+    retmsg = f"WARNING - {down_count} APs are down in {name} | 'down_aps'={down_count}"
 else:
     if args.total:
         total_aps = session.get_aps(swarm_id=sid, group=group, limit=args.total)
         total_count = len(total_aps)
         if total_count < args.total:
             retcode = 3
-            retmsg = f"Not enough APs in {name}. Expected {args.total}, got {total_count} | 'aps'={total_count}"
+            retmsg = f"UNKNOWN - Not enough APs in {name}. Expected {args.total}, got {total_count} | 'aps'={total_count}"
         else:
             retcode = 0
             retmsg = f"OK - {total_count} APs are up in {name} | 'aps'={total_count}"
