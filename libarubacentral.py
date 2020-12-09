@@ -200,16 +200,15 @@ class ArubaCentralAuth:
             logging.debug(f"Access token not cached. retrieving from {self.cfgdata['configpath']+'tokens/' + self.profile + '.token.json'}")
             self.access_token = self.retrieve_stored_token()
         if self.token_expired():
-            new_tokens = self.refresh_access_token()
-            self.get_new_token()
+            try:
+                logging.debug(f"Token Expired. Renewing with stored refresh token.")
+                self.refresh_access_token()
+            except RuntimeError:
+                logging.debug(f"Can't refresh expired token. Getting a new token")
+                self.get_new_token()
         if not self.access_token:
             logging.debug(f"Access token not stored. Generating a new token.")
-            cookies = self.get_login()
-            code = self.get_authcode(cookies)
-            self.get_access_token(code)
-        if self.token_expired():
-            self.refresh_access_token()
-        if not self.access_token:
+            self.get_new_token()
             raise RuntimeError('Token problem. No token stored, or token still expired after refresh.')
 
     def get_user_account_list(self, access_token: dict = None):
