@@ -39,13 +39,14 @@ else:
 sid = None
 group = None
 session = ArubaCentralAuth(ArubaCentralConfig(profile, config_path).read_config())
+down_count = None
 if args.vc and not args.swarmid:
     try:
         sid = session.get_swarm_id(args.vc)
-    except RuntimeError:
+    except RuntimeError as e:
         retcode = 3
-        retmsg = f"VC {args.vc} not found."
-        print(retmsg)
+        retmsg = f"VC {args.vc} not found: "
+        print(retmsg + str(e))
         exit(retcode)
     if args.name:
         name = "VC " + args.name
@@ -60,8 +61,15 @@ if args.swarmid:
 if args.group:
     group = args.group
     name = args.group
-down_aps = session.get_down_aps(swarm_id=sid, group=group)
-down_count = len(down_aps)
+    try:
+        sid = session.get_swarm_id(args.vc)
+        down_aps = session.get_down_aps(swarm_id=sid, group=group)
+        down_count = len(down_aps)
+    except RuntimeError as e:
+        retcode = 3
+        retmsg = f"Group {args.vc} not found: "
+        print(retmsg + str(e))
+        exit(retcode)
 
 if down_count >= args.crit:
     retcode = 2
