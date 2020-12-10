@@ -75,7 +75,9 @@ while True:
             if 'os_type' in i and i['os_type'] not in count_os:
                 count_os[i['os_type']] = 0
             if i['os_type'] == '--':
-                count_os['Unclassified Device '] += 1
+                if not 'Unclassified Device' in count_os:
+                    count_os['Unclassified Device'] = 0
+                count_os['Unclassified Device'] += 1
             else:
                 count_os[i['os_type']] += 1
             if 'connection' in i:

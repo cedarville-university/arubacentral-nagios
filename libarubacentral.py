@@ -149,7 +149,7 @@ class ArubaCentralAuth:
             with open(self.cfgdata['configpath'] + "/tokens/" + self.profile + ".token.json", 'r') as existingtokenfile:
                 data = json.loads(existingtokenfile.read())
         else:
-            print(f"No stored token for profile {self.profile}")
+            logging.debug(f"No stored token for profile {self.profile}")
         return data
 
     def refresh_access_token(self, access_token: dict=None) -> dict:
@@ -199,6 +199,9 @@ class ArubaCentralAuth:
         if not self.access_token:
             logging.debug(f"Access token not cached. retrieving from {self.cfgdata['configpath']+'tokens/' + self.profile + '.token.json'}")
             self.access_token = self.retrieve_stored_token()
+        if not self.access_token:
+            logging.debug(f"Access token not stored. Generating a new token.")
+            self.get_new_token()
         if self.token_expired():
             try:
                 logging.debug(f"Token Expired. Renewing with stored refresh token.")
@@ -207,15 +210,14 @@ class ArubaCentralAuth:
                 logging.debug(f"Can't refresh expired token. Getting a new token")
                 self.get_new_token()
         if not self.access_token:
-            logging.debug(f"Access token not stored. Generating a new token.")
-            self.get_new_token()
             raise RuntimeError('Token problem. No token stored, or token still expired after refresh.')
+
 
     def get_user_account_list(self, access_token: dict = None):
         return self._get_api("/platform/rbac/v1/users", access_token)
 
     def get_aps(self, access_token: dict = None, limit: int = 100, status: str = None, vc: str = None,
-                group: str = None, client_count: bool = None, label: str = None, swarm_id=None):
+                group: str = None, client_count: bool = None, label: str = None, swarm_id=None, mac_address=None):
         url = "/monitoring/v1/aps"
         if limit:
             url = self._add_arg(url, f"limit={str(limit)}")
@@ -231,6 +233,8 @@ class ArubaCentralAuth:
             url = self._add_arg(url, f"calculate_client_count=true")
         if label:
             url = self._add_arg(url, f"label={label}")
+        if mac_address:
+            url = self._add_arg(url, f"macaddr={mac_address}")
         logging.debug(f"getting aps: {url}")
         return self._get_api(url, access_token)['aps']
 
@@ -266,6 +270,28 @@ class ArubaCentralAuth:
             'access_token': this_access_token
         }
         r = requests.get(token_url, headers=headers, data=json.dumps(data), verify=True, timeout=10)
+        if r.status_code == 200:
+            api_data = json.loads(r.text)
+        else:
+            raise RuntimeError(f"STATUS CODE: {str(r.status_code)} \nDetail: {str(r.text)}")
+        return api_data
+
+    def _post_api(self, url, data: dict, access_token: dict = None) -> dict:
+        if not access_token:
+            self.authenticate()
+            access_token = self.access_token
+        api_data = dict()
+        this_access_token = access_token['access_token']
+        request_url = self.cfgdata['url'] + url
+        headers = {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
+        auth_data = {
+            'access_token': this_access_token
+        }
+        data.update(auth_data)
+        r = requests.post(request_url, headers=headers, data=json.dumps(data), verify=True, timeout=10)
         if r.status_code == 200:
             api_data = json.loads(r.text)
         else:
@@ -331,3 +357,23 @@ class ArubaCentralAuth:
         if group:
             url = self._add_arg(url, f"group={group}")
         return self._get_api(url, access_token=access_token)['swarms']
+
+    def name_ap(self, name, serial=None, mac=None, access_token=None):
+        if not serial:
+            if not mac:
+                raise RuntimeError("Need a Serial or Mac Address to rename an AP.")
+            else:
+                aps = self.get_aps(access_token=access_token,mac_address=mac)
+                if len(aps) == 1:
+                    serial = aps[0]['serial']
+                elif len(aps) > 1:
+                    for i in aps:
+                        if mac.lower().replace(' ','').replace('-','').replace(':','') == i['macaddr'].replace(';',''):
+                            serial = i['serial']
+                else:
+                    raise RuntimeError(f"Could not find AP with Mac Address {mac}")
+        url = f'/configuration/v2/ap_settings/{serial}'
+        ap_settings = self._get_api(url, access_token=access_token)
+        if ap_settings['hostname'] != name:
+            ap_settings.update({'hostname': name})
+            return self._post_api(url, data=ap_settings, access_token=access_token)
