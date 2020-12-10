@@ -62,7 +62,6 @@ if args.group:
     group = args.group
     name = args.group
     try:
-        sid = session.get_swarm_id(args.vc)
         down_aps = session.get_down_aps(swarm_id=sid, group=group)
         down_count = len(down_aps)
     except RuntimeError as e:

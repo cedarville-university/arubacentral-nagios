@@ -234,7 +234,7 @@ class ArubaCentralAuth:
         logging.debug(f"getting aps: {url}")
         return self._get_api(url, access_token)['aps']
 
-    def get_swarm_id(self, name, access_token: dict=None) -> str:
+    def get_swarm_id(self, name: str, access_token: dict=None) -> str:
         data = self._get_api('/monitoring/v1/swarms', access_token)
         for swarm in data['swarms']:
             if name.lower() in swarm['name'].lower():
