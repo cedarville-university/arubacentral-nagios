@@ -71,7 +71,7 @@ if args.group:
         print(retmsg + str(e))
         exit(retcode)
 
-if down_count >= args.crit:
+if down_count and down_count >= args.crit:
     retcode = 2
     retmsg = f"CRITICAL - {down_count} APs are down in {name} | 'down_aps'={down_count}"
 elif down_count >= args.warn:
