@@ -25,6 +25,7 @@ else:
 
 group = None
 DEBUG = None
+max_results = 1000 # << hard-coded because this is an Aruba limit
 networks = list()
 swarms = list()
 
@@ -59,7 +60,13 @@ if DEBUG:
 
 while True:
     try:
+        page = 1
         clients = session.get_wifi_clients(group=group)
+        all_clients = clients
+        while len(clients) == max_results:
+            clients = session.get_wifi_clients(group=group, offset=(page * 1000))
+            all_clients = all_clients + clients
+            page += 1
         count24 = 0
         count5 = 0
         count_os = dict()
