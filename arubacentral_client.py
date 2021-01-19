@@ -103,7 +103,7 @@ while True:
                 if vc not in count_vc:
                     count_vc[vc] = 0
                 count_vc[vc] += 1
-        print(f'PUTVAL "{HOSTNAME}/exec-aruba_all_clients/gauge-arubatotal" interval={INTERVAL} N:{len(clients)}')
+        print(f'PUTVAL "{HOSTNAME}/exec-aruba_all_clients/gauge-arubatotal" interval={INTERVAL} N:{len(all_clients)}')
         print(f'PUTVAL "{HOSTNAME}/exec-aruba_sick_clients/gauge-arubasick" interval={INTERVAL} N:{count_sick}')
         for key, value in count_os.items():
             print(f'PUTVAL "{HOSTNAME}/exec-os_aruba_{key.replace("/","").replace(" ", "")}_clients/gauge-arubaos" interval={INTERVAL} N:{value}')
