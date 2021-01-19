@@ -74,7 +74,7 @@ while True:
         count_sick = 0
         count_ssid = dict()
         count_vc = dict()
-        for i in clients:
+        for i in all_clients:
             if 'band' in i and i['band'] == 5:
                 count5 += 1
             else:
