@@ -264,11 +264,10 @@ class ArubaCentralAuth:
         token_url = self.cfgdata['url'] + url
         headers = {
             'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + this_access_token
         }
-        data = {
-            'access_token': this_access_token
-        }
+        data = {}
         r = requests.get(token_url, headers=headers, data=json.dumps(data), verify=True, timeout=10)
         if r.status_code == 200:
             api_data = json.loads(r.text)
@@ -285,12 +284,9 @@ class ArubaCentralAuth:
         request_url = self.cfgdata['url'] + url
         headers = {
             'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + this_access_token
         }
-        auth_data = {
-            'access_token': this_access_token
-        }
-        data.update(auth_data)
         r = requests.post(request_url, headers=headers, data=json.dumps(data), verify=True, timeout=10)
         if r.status_code == 200:
             api_data = json.loads(r.text)
