@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import requests.exceptions
 
 from libarubacentral import ArubaCentralConfig, ArubaCentralAuth
 import os
@@ -117,5 +118,7 @@ while True:
         print(f'PUTVAL "{HOSTNAME}/exec-aruba_24g_clients/gauge-arubaband" interval={INTERVAL} N:{count24}')
     except RuntimeError as e:
         print("Request failed: " + str(e))
+    except requests.exceptions.Timeout as f:
+        print("Request failed: " + str(f))
 
     time.sleep(float(INTERVAL))

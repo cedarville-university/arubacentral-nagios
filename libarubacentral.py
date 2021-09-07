@@ -65,6 +65,10 @@ class ArubaCentralAuth:
         self.cfgdata = cfgdata
         self.profile = cfgdata['profile']
         self.access_token = None
+        if 'http_timeout' in cfgdata.keys() and cfgdata['http_timeout']:
+            self.http_timeout = cfgdata['http_timeout']
+        else:
+            self.http_timeout = 10
 
     def get_login(self) -> dict:
         csrftoken = 'uninitialized'
@@ -217,7 +221,8 @@ class ArubaCentralAuth:
         return self._get_api("/platform/rbac/v1/users", access_token)
 
     def get_aps(self, access_token: dict = None, limit: int = 100, status: str = None, vc: str = None,
-                group: str = None, client_count: bool = None, label: str = None, swarm_id=None, mac_address=None):
+                group: str = None, client_count: bool = None, label: str = None, swarm_id=None, mac_address=None,
+                timeout=None):
         url = "/monitoring/v1/aps"
         if limit:
             url = self._add_arg(url, f"limit={str(limit)}")
@@ -236,7 +241,7 @@ class ArubaCentralAuth:
         if mac_address:
             url = self._add_arg(url, f"macaddr={mac_address}")
         logging.debug(f"getting aps: {url}")
-        return self._get_api(url, access_token)['aps']
+        return self._get_api(url, access_token, timeout=timeout)['aps']
 
     def get_swarm_id(self, name: str, access_token: dict=None) -> str:
         data = self._get_api('/monitoring/v1/swarms', access_token)
@@ -255,7 +260,9 @@ class ArubaCentralAuth:
         data = self._get_api(f'/monitoring/v1/aps/{serial}', access_token)
         return data
 
-    def _get_api(self, url, access_token: dict=None) -> dict:
+    def _get_api(self, url, timeout=None, access_token: dict=None) -> dict:
+        if not timeout and self.http_timeout:
+            timeout = self.http_timeout
         if not access_token:
             self.authenticate()
             access_token = self.access_token
@@ -268,14 +275,16 @@ class ArubaCentralAuth:
             'Authorization': 'Bearer ' + this_access_token
         }
         data = {}
-        r = requests.get(token_url, headers=headers, data=json.dumps(data), verify=True, timeout=10)
+        r = requests.get(token_url, headers=headers, data=json.dumps(data), verify=True, timeout=timeout)
         if r.status_code == 200:
             api_data = json.loads(r.text)
         else:
             raise RuntimeError(f"STATUS CODE: {str(r.status_code)} \nDetail: {str(r.text)}")
         return api_data
 
-    def _post_api(self, url, data: dict, access_token: dict = None) -> dict:
+    def _post_api(self, url, data: dict, access_token: dict = None, timeout=None) -> dict:
+        if not timeout:
+            timeout = self.http_timeout
         if not access_token:
             self.authenticate()
             access_token = self.access_token
@@ -287,7 +296,7 @@ class ArubaCentralAuth:
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + this_access_token
         }
-        r = requests.post(request_url, headers=headers, data=json.dumps(data), verify=True, timeout=10)
+        r = requests.post(request_url, headers=headers, data=json.dumps(data), verify=True, timeout=timeout)
         if r.status_code == 200:
             api_data = json.loads(r.text)
         else:
@@ -307,7 +316,8 @@ class ArubaCentralAuth:
         down_list = self.get_aps(status='Down', vc=vc, group=group, access_token=access_token, swarm_id=swarm_id)
         return down_list
 
-    def get_client_count(self, vc = None, group=None, network=None, label=None, access_token=None, swarm_id=None):
+    def get_client_count(self, vc = None, group=None, network=None, label=None, access_token=None, swarm_id=None,
+                         timeout=None):
         url = '/monitoring/v1/clients/count'
         if swarm_id:
             url = self._add_arg(url, f"swarm_id={swarm_id}")
@@ -319,10 +329,10 @@ class ArubaCentralAuth:
             url = self._add_arg(url, f"label={label}")
         if network:
             url = self._add_arg(url, f"network={network}")
-        return self._get_api(url, access_token=access_token)['count']
+        return self._get_api(url, access_token=access_token, timeout=timeout)['count']
 
     def get_wifi_clients(self, vc = None, group=None, network=None, label=None, access_token=None, count_only=False,
-                         limit=1000, band=None, offset=None):
+                         limit=1000, band=None, offset=None, timeout=None):
         url = '/monitoring/v1/clients/wireless'
         if limit:
             url = self._add_arg(url, f"limit={str(limit)}")
@@ -340,9 +350,9 @@ class ArubaCentralAuth:
             url = self._add_arg(url, f"offset={str(offset)}")
         url = self._add_arg(url, 'calculate_total=true')
         if count_only:
-            return self._get_api(url, access_token=access_token)['count']
+            return self._get_api(url, access_token=access_token, timeout=timeout)['count']
         else:
-            return self._get_api(url, access_token=access_token)['clients']
+            return self._get_api(url, access_token=access_token, timeout=timeout)['clients']
 
     def get_networks(self, access_token: dict=None, group=None):
         url = '/monitoring/v1/networks'
