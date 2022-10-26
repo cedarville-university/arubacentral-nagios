@@ -72,7 +72,11 @@ if args.group:
 
 if down_count >= args.crit:
     retcode = 2
-    retmsg = f"CRITICAL - {down_count} APs are down in {name} | 'down_aps'={down_count}"
+    if down_count == 100:
+        dc_string = "100+"
+    else:
+        dc_string = str(down_count)
+    retmsg = f"CRITICAL - {dc_string} APs are down in {name} | 'down_aps'={down_count}"
 elif down_count >= args.warn:
     retcode = 1
     retmsg = f"WARNING - {down_count} APs are down in {name} | 'down_aps'={down_count}"

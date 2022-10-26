@@ -241,7 +241,7 @@ class ArubaCentralAuth:
         if mac_address:
             url = self._add_arg(url, f"macaddr={mac_address}")
         logging.debug(f"getting aps: {url}")
-        return self._get_api(url, access_token, timeout=timeout)['aps']
+        return self._get_api(url, timeout=timeout, access_token=access_token)['aps']
 
     def get_swarm_id(self, name: str, access_token: dict=None) -> str:
         data = self._get_api('/monitoring/v1/swarms', access_token)
@@ -382,6 +382,8 @@ class ArubaCentralAuth:
                     raise RuntimeError(f"Could not find AP with Mac Address {mac}")
         url = f'/configuration/v2/ap_settings/{serial}'
         ap_settings = self._get_api(url, access_token=access_token)
+        if not 'hostname' in ap_settings:
+            pass
         if ap_settings['hostname'] != name:
             ap_settings.update({'hostname': name})
             return self._post_api(url, data=ap_settings, access_token=access_token)
