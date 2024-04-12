@@ -70,6 +70,7 @@ while True:
             page += 1
         count24 = 0
         count5 = 0
+        count6 = 0
         count_os = dict()
         count_conn = dict()
         count_sick = 0
@@ -78,6 +79,8 @@ while True:
         for i in all_clients:
             if 'band' in i and i['band'] == 5:
                 count5 += 1
+            elif 'band' in i and i['band'] == 6:
+                count6 += 1
             else:
                 count24 += 1
             if 'os_type' in i and i['os_type'] not in count_os:
@@ -125,6 +128,7 @@ while True:
         for key, value in count_conn.items():
             print(f'PUTVAL "{HOSTNAME}/exec-connection_aruba_{key}_clients/gauge-arubaconn" interval={INTERVAL} N:{value}')
         print(f'PUTVAL "{HOSTNAME}/exec-aruba_5g_clients/gauge-arubaband" interval={INTERVAL} N:{count5}')
+        print(f'PUTVAL "{HOSTNAME}/exec-aruba_6g_clients/gauge-arubaband" interval={INTERVAL} N:{count6}')
         print(f'PUTVAL "{HOSTNAME}/exec-aruba_24g_clients/gauge-arubaband" interval={INTERVAL} N:{count24}')
     except RuntimeError as e:
         print("Request failed: " + str(e))
