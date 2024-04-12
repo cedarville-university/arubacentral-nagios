@@ -104,8 +104,13 @@ while True:
                 if vc not in count_vc:
                     count_vc[vc] = 0
                 count_vc[vc] += 1
-            if 'group' in i and i['group']:
+            elif 'group' in i and i['group']:
                 group = i['group']
+                if group not in count_vc:
+                    count_vc[group] = 0
+                count_vc[group] += 1
+            elif 'group_name' in i and i['group_name']:
+                group = i['group_name']
                 if group not in count_vc:
                     count_vc[group] = 0
                 count_vc[group] += 1
