@@ -5,11 +5,14 @@ import os
 import logging
 from datetime import datetime, timedelta
 
+log = logging.getLogger('libarubacentral')
+
 
 class ArubaCentralConfig:
-    def __init__(self, profile, configpath):
+    def __init__(self, profile, configpath, debug=False):
         self.profile = profile
         self.configpath = configpath
+        log.setLevel(logging.DEBUG if debug else logging.INFO)
 
     def read_accounts(self, account):
         data = dict()
@@ -29,7 +32,7 @@ class ArubaCentralConfig:
             with open(self.configpath + "/config.yml", 'r') as ymlfile:
                 cfgdata = yaml.load(ymlfile, Loader=yaml.FullLoader)
 
-            # Get list of Centrla accounts
+            # Get list of Central accounts
             if os.path.isfile(self.configpath + "/accounts.yml"):
                 with open(self.configpath + "/accounts.yml", 'r') as ymlfile:
                     accounts = yaml.load(ymlfile, Loader=yaml.FullLoader)
@@ -120,7 +123,7 @@ class ArubaCentralAuth:
             print("text : " + str(result.text))
             exit(0)
 
-        logging.debug("authcode: %s", authcode)
+        log.debug("authcode: %s", authcode)
         return authcode
 
     def get_access_token(self, authcode) -> dict:
@@ -153,7 +156,7 @@ class ArubaCentralAuth:
             with open(self.cfgdata['configpath'] + "/tokens/" + self.profile + ".token.json", 'r') as existingtokenfile:
                 data = json.loads(existingtokenfile.read())
         else:
-            logging.debug(f"No stored token for profile {self.profile}")
+            log.debug(f"No stored token for profile {self.profile}")
         return data
 
     def refresh_access_token(self, access_token: dict=None) -> dict:
@@ -188,10 +191,10 @@ class ArubaCentralAuth:
             access_token = self.access_token
         expires_at = datetime.fromtimestamp(access_token['expires_at'])
         if datetime.now() > expires_at:
-            logging.debug("Access token expired, refresh requested.")
+            log.debug("Access token expired, refresh requested.")
             return True
         else:
-            logging.debug("Access token valid. Expires at: %s ", expires_at)
+            log.debug("Access token valid. Expires at: %s ", expires_at)
             return False
 
     def get_new_token(self):
@@ -201,17 +204,17 @@ class ArubaCentralAuth:
 
     def authenticate(self):
         if not self.access_token:
-            logging.debug(f"Access token not cached. retrieving from {self.cfgdata['configpath']+'tokens/' + self.profile + '.token.json'}")
+            log.debug(f"Access token not cached. retrieving from {self.cfgdata['configpath']+'tokens/' + self.profile + '.token.json'}")
             self.access_token = self.retrieve_stored_token()
         if not self.access_token:
-            logging.debug(f"Access token not stored. Generating a new token.")
+            log.debug(f"Access token not stored. Generating a new token.")
             self.get_new_token()
         if self.token_expired():
             try:
-                logging.debug(f"Token Expired. Renewing with stored refresh token.")
+                log.debug(f"Token Expired. Renewing with stored refresh token.")
                 self.refresh_access_token()
             except RuntimeError:
-                logging.debug(f"Can't refresh expired token. Getting a new token")
+                log.debug(f"Can't refresh expired token. Getting a new token")
                 self.get_new_token()
         if not self.access_token:
             raise RuntimeError('Token problem. No token stored, or token still expired after refresh.')
@@ -240,7 +243,7 @@ class ArubaCentralAuth:
             url = self._add_arg(url, f"label={label}")
         if mac_address:
             url = self._add_arg(url, f"macaddr={mac_address}")
-        logging.debug(f"getting aps: {url}")
+        log.debug(f"getting aps: {url}")
         return self._get_api(url, timeout=timeout, access_token=access_token)['aps']
 
     def get_swarm_id(self, name: str, access_token: dict=None) -> str:
@@ -354,13 +357,13 @@ class ArubaCentralAuth:
         else:
             return self._get_api(url, access_token=access_token, timeout=timeout)['clients']
 
-    def get_networks(self, access_token: dict=None, group=None):
-        url = '/monitoring/v1/networks'
+    def get_networks(self, access_token: dict = None, group=None, timeout=None):
+        url = '/monitoring/v2/networks'
         if group:
             url = self._add_arg(url, f"group={group}")
-        return self._get_api(url, access_token=access_token)['networks']
+        return self._get_api(url, access_token=access_token, timeout=timeout)['networks']
 
-    def get_vcs(self, access_token: dict=None, group=None):
+    def get_vcs(self, access_token: dict = None, group=None):
         url = '/monitoring/v1/swarms'
         if group:
             url = self._add_arg(url, f"group={group}")

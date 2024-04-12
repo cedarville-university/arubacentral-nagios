@@ -35,7 +35,7 @@ if args.group:
 if args.DEBUG:
     DEBUG = True
 
-session = ArubaCentralAuth(ArubaCentralConfig(profile, config_path).read_config())
+session = ArubaCentralAuth(ArubaCentralConfig(profile, config_path, DEBUG).read_config())
 try:
     networks = session.get_networks(group=group)
     swarms = session.get_swarms(group=group)
@@ -62,10 +62,10 @@ if DEBUG:
 while True:
     try:
         page = 1
-        clients = session.get_wifi_clients(group=group)
+        clients = session.get_wifi_clients(group=group, timeout=90)
         all_clients = clients
         while len(clients) == max_results:
-            clients = session.get_wifi_clients(group=group, offset=(page * 1000))
+            clients = session.get_wifi_clients(group=group, offset=(page * 1000), timeout=90)
             all_clients = all_clients + clients
             page += 1
         count24 = 0
@@ -95,15 +95,20 @@ while True:
                     count_conn[c] += 1
             if 'health' in i and i['health'] < 75:
                 count_sick += 1
-            if 'network' in i:
+            if 'network' in i and i['network']:
                 if i['network'] not in count_ssid:
                     count_ssid[i['network']] = 0
                 count_ssid[i['network']] += 1
-            if 'swarm_id' in i:
+            if 'swarm_id' in i and i['swarm_id'] and swarm_id_lookup.get(i['swarm_id']):
                 vc = swarm_id_lookup[i['swarm_id']]
                 if vc not in count_vc:
                     count_vc[vc] = 0
                 count_vc[vc] += 1
+            if 'group' in i and i['group']:
+                group = i['group']
+                if group not in count_vc:
+                    count_vc[group] = 0
+                count_vc[group] += 1
         print(f'PUTVAL "{HOSTNAME}/exec-aruba_all_clients/gauge-arubatotal" interval={INTERVAL} N:{len(all_clients)}')
         print(f'PUTVAL "{HOSTNAME}/exec-aruba_sick_clients/gauge-arubasick" interval={INTERVAL} N:{count_sick}')
         for key, value in count_os.items():
