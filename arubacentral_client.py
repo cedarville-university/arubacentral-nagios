@@ -5,7 +5,17 @@ from libarubacentral import ArubaCentralConfig, ArubaCentralAuth
 import os
 import time
 import argparse
+import logging
+import datetime
 
+logging.basicConfig(filename="arubacentral_client.log",
+                    filemode='a',
+                    format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+                    level=logging.DEBUG)
+log = logging.getLogger("arubacentral_client")
+# ConsoleOutputHandler = logging.StreamHandler()
+# log.addHandler(ConsoleOutputHandler)
+# log.setLevel(logging.INFO)
 tool_description = "This tool is used by collectd to get client count statistics per VC from Aruba Central"
 parser = argparse.ArgumentParser(description=tool_description, add_help=True)
 parser.add_argument("-g", "--group", help ="get clients from this group")
@@ -26,7 +36,7 @@ else:
 
 group = None
 DEBUG = None
-max_results = 1000 # << hard-coded because this is an Aruba limit
+max_results = 1000  # << hard-coded because this is an Aruba limit
 networks = list()
 swarms = list()
 
@@ -35,19 +45,25 @@ if args.group:
 if args.DEBUG:
     DEBUG = True
 
+if DEBUG:
+    log.setLevel(logging.DEBUG)
+log.debug("starting arubacentral client counter")
 session = ArubaCentralAuth(ArubaCentralConfig(profile, config_path, DEBUG).read_config())
+log.debug(f"got Session token")
 try:
     networks = session.get_networks(group=group)
+    log.debug(f"got {len(networks)} networks")
     swarms = session.get_swarms(group=group)
+    log.debug(f"got {len(swarms)} swarms")
 except RuntimeError as e:
     print("Request failed: " + str(e))
     exit(1)
 swarm_id_lookup = {}
 for n in swarms:
     swarm_id_lookup[n['swarm_id']] = n['name']
+log.debug('finished building swarm lookup')
 HOSTNAME = os.environ.get("COLLECTD_HOSTNAME")
 INTERVAL = os.environ.get("COLLECTD_INTERVAL")
-
 if args.interval:
     INTERVAL = args.interval
 
@@ -58,16 +74,21 @@ if not INTERVAL:
 
 if DEBUG:
     INTERVAL = 5
-
+log.debug(f"running every {INTERVAL} seconds, to host {HOSTNAME}")
 while True:
     try:
+        start = datetime.datetime.now()
         page = 1
         clients = session.get_wifi_clients(group=group, timeout=90)
+        log.debug(f'fetched page {page} of {len(clients)} clients')
         all_clients = clients
         while len(clients) == max_results:
             clients = session.get_wifi_clients(group=group, offset=(page * 1000), timeout=90)
             all_clients = all_clients + clients
+            log.debug(f'fetched page {page} of {len(clients)} clients, total so far {len(all_clients)}'
+                      f' (offset: {page*1000})')
             page += 1
+
         count24 = 0
         count5 = 0
         count6 = 0
@@ -76,6 +97,8 @@ while True:
         count_sick = 0
         count_ssid = dict()
         count_vc = dict()
+        log.debug(f"beginning counts for {len(all_clients)}")
+        client_index = 0
         for i in all_clients:
             if 'band' in i and i['band'] == 5:
                 count5 += 1
@@ -108,15 +131,18 @@ while True:
                     count_vc[vc] = 0
                 count_vc[vc] += 1
             elif 'group' in i and i['group']:
-                group = i['group']
-                if group not in count_vc:
-                    count_vc[group] = 0
-                count_vc[group] += 1
+                group_name = i['group']
+                if group_name not in count_vc:
+                    count_vc[group_name] = 0
+                count_vc[group_name] += 1
             elif 'group_name' in i and i['group_name']:
-                group = i['group_name']
-                if group not in count_vc:
-                    count_vc[group] = 0
-                count_vc[group] += 1
+                group_name = i['group_name']
+                if group_name not in count_vc:
+                    count_vc[group_name] = 0
+                count_vc[group_name] += 1
+            client_index += 1
+            if client_index > 0 and client_index % 1000 == 0:
+                log.debug(f"counted {client_index} clients so far...")
         print(f'PUTVAL "{HOSTNAME}/exec-aruba_all_clients/gauge-arubatotal" interval={INTERVAL} N:{len(all_clients)}')
         print(f'PUTVAL "{HOSTNAME}/exec-aruba_sick_clients/gauge-arubasick" interval={INTERVAL} N:{count_sick}')
         for key, value in count_os.items():
@@ -134,5 +160,6 @@ while True:
         print("Request failed: " + str(e))
     except requests.exceptions.Timeout as f:
         print("Request failed: " + str(f))
-
-    time.sleep(float(INTERVAL))
+    elapsed = datetime.datetime.now() - start
+    if elapsed.seconds < INTERVAL:
+        time.sleep(float(INTERVAL-elapsed.seconds))
