@@ -8,14 +8,7 @@ import argparse
 import logging
 import datetime
 
-logging.basicConfig(filename="arubacentral_client.log",
-                    filemode='a',
-                    format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
-                    level=logging.DEBUG)
-log = logging.getLogger("arubacentral_client")
-# ConsoleOutputHandler = logging.StreamHandler()
-# log.addHandler(ConsoleOutputHandler)
-# log.setLevel(logging.INFO)
+
 tool_description = "This tool is used by collectd to get client count statistics per VC from Aruba Central"
 parser = argparse.ArgumentParser(description=tool_description, add_help=True)
 parser.add_argument("-g", "--group", help ="get clients from this group")
@@ -33,6 +26,15 @@ if args.profile:
     profile = args.profile
 else:
     profile = 'Default'
+
+logging.basicConfig(filename=config_path + "/arubacentral_client.log",
+                    filemode='a',
+                    format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+                    level=logging.DEBUG)
+log = logging.getLogger("arubacentral_client")
+# ConsoleOutputHandler = logging.StreamHandler()
+# log.addHandler(ConsoleOutputHandler)
+# log.setLevel(logging.INFO)
 
 group = None
 DEBUG = None
